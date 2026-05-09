@@ -5,6 +5,7 @@
 	import { base, resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { NAV_LINKS } from '$lib/utils/links';
+	import { isActive } from '$lib/utils/paths';
 
 	let { children } = $props();
 
@@ -69,7 +70,7 @@
 			{#each NAV_LINKS as link (link.href)}
 				<a
 					href={resolve(link.href)}
-					class="rounded-xl px-4 py-2 text-center text-sm font-bold {currentPath === link.href
+					class="rounded-xl px-4 py-2 text-center text-sm font-bold {isActive(link.href)
 						? 'bg-orange-500 text-white'
 						: 'bg-neutral-800 text-neutral-500'}"
 				>
@@ -90,9 +91,7 @@
 					{link.icon}
 				</div>
 				<div
-					class="text-sm font-bold {currentPath === link.href
-						? 'text-orange-500'
-						: 'text-neutral-500'}"
+					class="text-sm font-bold {isActive(link.href) ? 'text-orange-500' : 'text-neutral-500'}"
 				>
 					{link.name}
 				</div>
