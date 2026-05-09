@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { dev } from '$app/environment';
-	import { resolve } from '$app/paths';
+	import { base, resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { NAV_LINKS } from '$lib/utils/links';
 
@@ -12,7 +11,7 @@
 	const currentPath = $derived(page.url.pathname);
 
 	onMount(() => {
-		navigator.serviceWorker.register(dev ? '/service-worker.js' : '/GoReach/service-worker.js', {
+		navigator.serviceWorker.register(dev ? '/service-worker.js' : `${base}/service-worker.js`, {
 			type: dev ? 'module' : 'classic'
 		});
 	});
@@ -26,8 +25,8 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
 	<meta name="theme-color" content="#ff3e00" />
+	<title>GoReach</title>
 </svelte:head>
 
 <div class="app relative h-screen">
