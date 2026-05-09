@@ -1,8 +1,8 @@
 {
 	"name": "GoReach",
 	"short_name": "GoReach",
-	"start_url": "/",
-	"scope": "/",
+	"start_url": "/GoReach/",
+	"scope": "/GoReach/",
 	"display": "standalone",
 	"background_color": "#ffffff",
 	"theme_color": "#ff3e00",
