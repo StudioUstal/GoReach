@@ -12,7 +12,7 @@
 	const currentPath = $derived(page.url.pathname);
 
 	onMount(() => {
-		navigator.serviceWorker.register('/service-worker.js', {
+		navigator.serviceWorker.register(dev ? '/service-worker.js' : '/GoReach/service-worker.js', {
 			type: dev ? 'module' : 'classic'
 		});
 	});
