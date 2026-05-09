@@ -1,2 +1,10 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+	import Task from '$lib/components/Task.svelte';
+	import { GOALS } from '$lib/constants/goals';
+</script>
+
+<div class="flex flex-col gap-3">
+	{#each GOALS as goal (goal.id)}
+		<Task {goal} />
+	{/each}
+</div>

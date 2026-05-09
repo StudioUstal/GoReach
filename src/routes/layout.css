@@ -1,3 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
+
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html.dark {
+	background-color: #0d0d0d;
+}
+
+body {
+	font-family: 'Google Sans', sans-serif;
+}
