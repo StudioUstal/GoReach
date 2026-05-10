@@ -1,9 +1,19 @@
 <script lang="ts">
+	import { invalidate } from '$app/navigation';
+	import { UpsertEntry } from '$lib/services/entry.service';
+	import type { EntryAction } from '$lib/types/entry';
+	import { GetTodayKey } from '$lib/utils/keys';
 	import { slide } from 'svelte/transition';
 
-	const { goal } = $props();
+	const { goal, todayEntry } = $props();
 
-	let progress = $derived(goal.progress);
+	const currentGoalEntry = $derived(() =>
+		todayEntry
+			? todayEntry.actions.filter((action: EntryAction) => action.goalId === goal.id).at(-1)
+			: null
+	);
+
+	let progress = $derived(currentGoalEntry()?.progress);
 
 	function progressPercentage() {
 		return Math.min((progress / goal.max) * 100, 100);
@@ -20,9 +30,25 @@
 		return colorMap[goal.progressColor || 'text-orange-500'] || colorMap['text-orange-500'];
 	}
 
-	function setProgress(level: number) {
+	let updating = $state(false);
+
+	async function setProgress(level: number) {
+		updating = true;
 		const newProgress = progress === level ? level - 1 : level;
 		progress = newProgress;
+
+		try {
+			await UpsertEntry(GetTodayKey(), [
+				{
+					goalId: goal.id,
+					progress: newProgress,
+					createdAt: Date.now()
+				}
+			]);
+			await invalidate('app:layout');
+		} finally {
+			updating = false;
+		}
 	}
 </script>
 
@@ -38,7 +64,7 @@
 			</div>
 			<div>
 				<h2 class="text-lg font-bold text-white">{goal.name}</h2>
-				<p class="text-sm text-neutral-500">{goal.description}</p>
+				<p class="text-sm text-neutral-500">Cíl: {goal.max} za den</p>
 			</div>
 		</div>
 		<div class="text-center text-sm text-neutral-500">
@@ -60,6 +86,7 @@
 		{#each Array.from({ length: goal.max }, (_, i) => i + 1) as level (level)}
 			<button
 				type="button"
+				disabled={updating}
 				class="h-6 w-6 cursor-pointer appearance-none rounded-md border-2 border-neutral-700 bg-neutral-800 transition-all focus:ring-0 focus:outline-none"
 				style={level <= progress
 					? `background-color: ${themeColor()}; border-color: ${themeColor()}`
