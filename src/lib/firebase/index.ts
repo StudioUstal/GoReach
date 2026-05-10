@@ -24,9 +24,16 @@ const firebaseConfig = {
 	appId: PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
-export const app = initializeApp(firebaseConfig);
+// Initialize Firebase only in the browser
+let app: any = null;
+let authInstance: any = null;
+let dbInstance: any = null;
 
-// Only initialize auth and db in the browser to avoid errors during prerendering
-export const auth = browser ? getAuth(app) : null;
-export const db = browser ? getFirestore(app) : null;
+if (browser) {
+	app = initializeApp(firebaseConfig);
+	authInstance = getAuth(app);
+	dbInstance = getFirestore(app);
+}
+
+export const auth = authInstance;
+export const db = dbInstance;
