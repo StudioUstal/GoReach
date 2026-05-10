@@ -3,6 +3,7 @@ import { auth, db } from '$lib/firebase';
 import { doc, runTransaction } from 'firebase/firestore';
 
 export const UpsertEntry = async (dateKey: string, entry_actions: EntryAction[]) => {
+	if (!auth || !db) throw new Error('Firebase not initialized');
 	const user = auth.currentUser;
 
 	if (!user) {

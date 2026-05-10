@@ -14,6 +14,7 @@ const normalizeEntry = (dateKey: string, data: Record<string, unknown>): Entry =
 };
 
 export const GetGoals = async (userId: string) => {
+	if (!db) throw new Error('Firebase not initialized');
 	const goalsRef = collection(db, 'users', userId, 'goals');
 	const goalsSnapshot = await getDocs(goalsRef);
 
@@ -21,6 +22,7 @@ export const GetGoals = async (userId: string) => {
 };
 
 export const GetEntries = async (userId: string) => {
+	if (!db) throw new Error('Firebase not initialized');
 	const entriesRef = collection(db, 'users', userId, 'entries');
 	const entriesSnapshot = await getDocs(entriesRef);
 
@@ -28,6 +30,7 @@ export const GetEntries = async (userId: string) => {
 };
 
 export const GetTodayEntry = async (userId: string, dateKey: string) => {
+	if (!db) throw new Error('Firebase not initialized');
 	const entriesRef = collection(db, 'users', userId, 'entries');
 	const entriesSnapshot = await getDocs(entriesRef);
 	const todayEntryDoc = entriesSnapshot.docs.find((doc) => doc.id === dateKey);
@@ -40,6 +43,7 @@ export const GetWeeklyEntries = async (
 	weekStartKey: string,
 	weekEndKey: string
 ) => {
+	if (!db) throw new Error('Firebase not initialized');
 	const entriesRef = collection(db, 'users', userId, 'entries');
 	const entriesSnapshot = await getDocs(entriesRef);
 	const weeklyEntries = entriesSnapshot.docs
@@ -50,6 +54,7 @@ export const GetWeeklyEntries = async (
 };
 
 export const GetRanks = async () => {
+	if (!db) throw new Error('Firebase not initialized');
 	const ranksRef = collection(db, 'ranks');
 	const ranksSnapshot = await getDocs(ranksRef);
 

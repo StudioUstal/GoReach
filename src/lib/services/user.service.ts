@@ -2,6 +2,7 @@ import { auth, db } from '$lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export const ensureUserDocument = async () => {
+	if (!auth || !db) return;
 	const user = auth.currentUser;
 
 	if (!user) return;

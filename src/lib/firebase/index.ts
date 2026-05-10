@@ -13,6 +13,7 @@ import {
 } from '$env/static/public';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { browser } from '$app/environment';
 
 const firebaseConfig = {
 	apiKey: PUBLIC_FIREBASE_API_KEY,
@@ -26,5 +27,6 @@ const firebaseConfig = {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Only initialize auth and db in the browser to avoid errors during prerendering
+export const auth = browser ? getAuth(app) : null;
+export const db = browser ? getFirestore(app) : null;
