@@ -13,7 +13,6 @@ import {
 } from '$env/static/public';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { browser } from '$app/environment';
 
 const firebaseConfig = {
 	apiKey: PUBLIC_FIREBASE_API_KEY,
@@ -24,30 +23,6 @@ const firebaseConfig = {
 	appId: PUBLIC_FIREBASE_APP_ID
 };
 
-// Debug logging
-if (browser) {
-	console.log('Firebase Config:', {
-		apiKey: PUBLIC_FIREBASE_API_KEY ? '***' + PUBLIC_FIREBASE_API_KEY.slice(-4) : 'MISSING',
-		authDomain: PUBLIC_FIREBASE_AUTH_DOMAIN,
-		projectId: PUBLIC_FIREBASE_PROJECT_ID,
-		appId: PUBLIC_FIREBASE_APP_ID
-	});
-}
-
-// Initialize Firebase only in the browser
-let app: any = null;
-let authInstance: any = null;
-let dbInstance: any = null;
-
-if (browser) {
-	try {
-		app = initializeApp(firebaseConfig);
-		authInstance = getAuth(app);
-		dbInstance = getFirestore(app);
-	} catch (error) {
-		console.error('Firebase initialization error:', error);
-	}
-}
-
-export const auth = authInstance;
-export const db = dbInstance;
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
