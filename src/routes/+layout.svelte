@@ -3,13 +3,10 @@
 	import './layout.css';
 	import { dev } from '$app/environment';
 	import { base, resolve } from '$app/paths';
-	import { page } from '$app/state';
 	import { NAV_LINKS } from '$lib/utils/links';
 	import { isActive } from '$lib/utils/paths';
 
 	let { children } = $props();
-
-	const currentPath = $derived(page.url.pathname);
 
 	onMount(() => {
 		navigator.serviceWorker.register(dev ? '/service-worker.js' : `${base}/service-worker.js`, {
@@ -59,18 +56,20 @@
 			</div>
 
 			<div class="rounded-2xl border border-neutral-800 bg-neutral-900 p-2 md:p-4">
-				<div class="text-sm text-neutral-500 uppercase">Streak</div>
+				<div class="text-sm text-neutral-500 uppercase">Splněno</div>
 				<div class="text-2xl font-bold text-green-500">0%</div>
 			</div>
 		</div>
 
 		<hr class="mt-4 rounded-full border-2 border-neutral-800" />
 
-		<div class="mt-4 grid grid-cols-4 gap-2">
+		<div class="mt-4 flex flex-wrap gap-1 sm:grid sm:grid-cols-4 sm:gap-2">
 			{#each NAV_LINKS as link (link.href)}
 				<a
 					href={resolve(link.href)}
-					class="rounded-xl px-4 py-2 text-center text-sm font-bold {isActive(link.href)
+					class="rounded-xl px-4 py-2 text-center text-sm font-bold transition-colors {isActive(
+						link.href
+					)
 						? 'bg-orange-500 text-white'
 						: 'bg-neutral-800 text-neutral-500'}"
 				>
@@ -91,7 +90,9 @@
 					{link.icon}
 				</div>
 				<div
-					class="text-sm font-bold {isActive(link.href) ? 'text-orange-500' : 'text-neutral-500'}"
+					class="text-sm font-bold transition-colors {isActive(link.href)
+						? 'text-orange-500'
+						: 'text-neutral-500'}"
 				>
 					{link.name}
 				</div>

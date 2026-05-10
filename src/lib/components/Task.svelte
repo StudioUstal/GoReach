@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { slide } from 'svelte/transition';
+
 	const { goal } = $props();
 
 	let progress = $derived(goal.progress);
@@ -54,11 +56,11 @@
 		></div>
 	</div>
 
-	<div class="mt-4 flex flex-wrap gap-1">
+	<div class="my-4 flex flex-wrap gap-1">
 		{#each Array.from({ length: goal.max }, (_, i) => i + 1) as level (level)}
 			<button
 				type="button"
-				class="h-6 w-6 appearance-none rounded-md border-2 border-neutral-700 bg-neutral-800 transition-all focus:ring-0 focus:outline-none"
+				class="h-6 w-6 cursor-pointer appearance-none rounded-md border-2 border-neutral-700 bg-neutral-800 transition-all focus:ring-0 focus:outline-none"
 				style={level <= progress
 					? `background-color: ${themeColor()}; border-color: ${themeColor()}`
 					: ''}
@@ -70,7 +72,10 @@
 	</div>
 
 	{#if progress === goal.max}
-		<div class="mt-4 rounded-md bg-orange-800/25 p-2 text-center text-sm font-bold text-orange-600">
+		<div
+			transition:slide
+			class="rounded-md bg-orange-800/25 p-2 text-center text-sm font-bold text-orange-600"
+		>
 			✓ Splněno! +100 XP
 		</div>
 	{/if}
