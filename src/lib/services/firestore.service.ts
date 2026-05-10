@@ -2,7 +2,7 @@ import { db } from '$lib/firebase';
 import type { Entry, EntryAction } from '$lib/types/entry';
 import type { Goal } from '$lib/types/goal';
 import type { Rank } from '$lib/types/rank';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, doc, getDocs, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 
 const normalizeEntry = (dateKey: string, data: Record<string, unknown>): Entry => {
 	const actions = (data.actions ?? data.goals ?? []) as EntryAction[];
@@ -59,4 +59,41 @@ export const GetRanks = async () => {
 	const ranksSnapshot = await getDocs(ranksRef);
 
 	return ranksSnapshot.docs.map((doc) => doc.data()) as Rank[];
+};
+
+export const SubscribeToGoals = (
+	userId: string,
+	onUpdate: (goals: Goal[]) => void
+): Unsubscribe => {
+	if (!db) throw new Error('Firebase not initialized');
+	const goalsRef = collection(db, 'users', userId, 'goals');
+
+	return onSnapshot(goalsRef, (snapshot) => {
+		const goals = snapshot.docs
+			.map((goalDoc) => goalDoc.data())
+			.toSorted((a, b) => a.id - b.id) as Goal[];
+		onUpdate(goals);
+	});
+};
+
+export const SubscribeToTodayEntry = (
+	userId: string,
+	dateKey: string,
+	onUpdate: (entry: Entry | null) => void
+): Unsubscribe => {
+	if (!db) throw new Error('Firebase not initialized');
+	const todayEntryRef = doc(db, 'users', userId, 'entries', dateKey);
+
+	return onSnapshot(todayEntryRef, (snapshot) => {
+		onUpdate(snapshot.exists() ? normalizeEntry(snapshot.id, snapshot.data()) : null);
+	});
+};
+
+export const SubscribeToRanks = (onUpdate: (ranks: Rank[]) => void): Unsubscribe => {
+	if (!db) throw new Error('Firebase not initialized');
+	const ranksRef = collection(db, 'ranks');
+
+	return onSnapshot(ranksRef, (snapshot) => {
+		onUpdate(snapshot.docs.map((rankDoc) => rankDoc.data()) as Rank[]);
+	});
 };

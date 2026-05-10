@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Task from '$lib/components/Task.svelte';
+	import { goals, todayEntry } from '$lib/stores/app-data';
 
-	const { data } = $props();
-	const goals = $derived(data.goals);
-	const todayEntry = $derived(data.todayEntry);
+	const currentGoals = $derived($goals);
+	const currentTodayEntry = $derived($todayEntry);
 </script>
 
 <div class="flex flex-col gap-3">
-	{#each goals as goal (goal.id)}
-		<Task {goal} {todayEntry} />
+	{#each currentGoals as goal (goal.id)}
+		<Task {goal} todayEntry={currentTodayEntry} />
 	{/each}
 </div>

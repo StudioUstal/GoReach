@@ -5,15 +5,18 @@
 	import { NAV_LINKS } from '$lib/utils/links';
 	import { isActive } from '$lib/utils/paths';
 	import { GetCurrentRank } from '$lib/services/rank.service.js';
+	import { goals, ranks, seedAppData, startRealtimeSync, todayEntry } from '$lib/stores/app-data';
 
 	const { children, data } = $props();
 
-	const ranks = $derived(data.ranks);
+	const currentRanks = $derived($ranks);
+	const currentGoals = $derived($goals);
+	const currentTodayEntry = $derived($todayEntry);
 	const todayXp = $derived(() => {
 		let xp = 0;
 
-		data.todayEntry?.actions.forEach((action) => {
-			const goal = data.goals.find((g) => g.id === action.goalId);
+		currentTodayEntry?.actions.forEach((action) => {
+			const goal = currentGoals.find((g) => g.id === action.goalId);
 			if (goal && action.progress > 0 && action.progress >= goal.max) {
 				xp += 100;
 			}
@@ -21,18 +24,23 @@
 
 		return xp;
 	});
-	const rank = $derived(() => GetCurrentRank(todayXp(), ranks));
+	const rank = $derived(() => GetCurrentRank(todayXp(), currentRanks));
 	const streak = $derived(() => {
 		return 1; // Placeholder, implement streak logic based on user data
 	});
 	const completed = $derived(() => {
-		return (todayXp() / (data.goals.length * 100)) * 100; // Placeholder, calculate based on completed goals
+		return (todayXp() / (currentGoals.length * 100)) * 100; // Placeholder, calculate based on completed goals
 	});
 
 	onMount(() => {
+		seedAppData(data);
+
+		const stopRealtimeSync = startRealtimeSync(data.user.uid);
 		navigator.serviceWorker.register(dev ? '/service-worker.js' : `${base}/service-worker.js`, {
 			type: dev ? 'module' : 'classic'
 		});
+
+		return stopRealtimeSync;
 	});
 
 	const todayString = new Date().toLocaleDateString('cs-CZ', {

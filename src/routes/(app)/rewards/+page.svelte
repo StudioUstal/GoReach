@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { GetCurrentRank } from '$lib/services/rank.service';
+	import { goals, ranks, todayEntry } from '$lib/stores/app-data';
 
-	const { data } = $props();
-
-	const ranks = $derived([...data.ranks].sort((a, b) => a.requiredXp - b.requiredXp));
+	const currentRanks = $derived([...$ranks].sort((a, b) => a.requiredXp - b.requiredXp));
+	const currentGoals = $derived($goals);
+	const currentTodayEntry = $derived($todayEntry);
 
 	const todayXp = $derived(() => {
 		let xp = 0;
 
-		data.todayEntry?.actions.forEach((action) => {
-			const goal = data.goals.find((g) => g.id === action.goalId);
+		currentTodayEntry?.actions.forEach((action) => {
+			const goal = currentGoals.find((g) => g.id === action.goalId);
 			if (goal && action.progress > 0 && action.progress >= goal.max) {
 				xp += 100;
 			}
@@ -18,13 +19,13 @@
 		return xp;
 	});
 
-	const currentRank = $derived(() => GetCurrentRank(todayXp(), [...ranks]));
+	const currentRank = $derived(() => GetCurrentRank(todayXp(), [...currentRanks]));
 	const currentRankIndex = $derived(() =>
-		ranks.findIndex((rank) => rank.displayName === currentRank()?.displayName)
+		currentRanks.findIndex((rank) => rank.displayName === currentRank()?.displayName)
 	);
 </script>
 
-{#each ranks as rank, index (rank.displayName)}
+{#each currentRanks as rank, index (rank.displayName)}
 	{#if index <= currentRankIndex()}
 		<div
 			class="mb-4 flex items-center gap-4 rounded-2xl border border-green-800 bg-green-700/15 p-4"
