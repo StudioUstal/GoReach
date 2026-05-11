@@ -61,7 +61,7 @@
 		<div
 			class="mb-4 flex items-center gap-4 rounded-2xl border border-green-800 bg-green-700/15 p-4"
 		>
-			<div class="text-3xl">{rank.icon}</div>
+			<div class="text-2xl sm:text-3xl">{rank.icon}</div>
 			<div>
 				<div class="text-lg font-bold text-white">{rank.displayName}</div>
 				<div class="text-sm text-neutral-500">Vyžaduje průměrných {rank.requiredXp} XP / týden</div>
@@ -73,7 +73,7 @@
 		<div
 			class="mb-4 flex items-center gap-4 rounded-2xl border border-orange-600 bg-neutral-900 p-4"
 		>
-			<div class="text-3xl">{rank.icon}</div>
+			<div class="text-2xl sm:text-3xl">{rank.icon}</div>
 			<div>
 				<div class="text-lg font-bold text-white">{rank.displayName}</div>
 				<div class="text-sm text-neutral-500">Vyžaduje průměrných {rank.requiredXp} XP / týden</div>
@@ -87,7 +87,7 @@
 		<div
 			class="mb-4 flex items-center gap-4 rounded-2xl border border-neutral-800/50 bg-neutral-900/50 p-4"
 		>
-			<div class="text-3xl opacity-50">{rank.icon}</div>
+			<div class="text-2xl opacity-50 sm:text-3xl">{rank.icon}</div>
 			<div>
 				<div class="text-lg font-bold text-white opacity-50">{rank.displayName}</div>
 				<div class="text-sm text-neutral-500 opacity-50">
