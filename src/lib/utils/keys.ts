@@ -9,7 +9,7 @@ export const GetTodayKey = (): string => {
 export const GetWeekKey = (): string => {
 	const today = new Date();
 	const lastWeek = new Date(today);
-	lastWeek.setDate(today.getDate() - 7);
+	lastWeek.setDate(today.getDate() - 6);
 
 	const year = lastWeek.getFullYear();
 	const month = String(lastWeek.getMonth() + 1).padStart(2, '0');

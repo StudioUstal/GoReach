@@ -80,7 +80,7 @@
 			</div>
 
 			<div class="ml-auto text-base font-bold text-orange-600">
-				{Math.max(0, rank.requiredXp - currentAverageXp())} XP
+				{Math.max(0, rank.requiredXp - currentAverageXp()).toFixed(2)} XP
 			</div>
 		</div>
 	{:else}
