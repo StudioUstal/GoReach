@@ -7,14 +7,23 @@
 	import { GetCurrentRank } from '$lib/services/rank.service.js';
 	import { SubscribeToWeeklyEntries } from '$lib/services/firestore.service.js';
 	import { GetTodayKey, GetWeekKey } from '$lib/utils/keys';
-	import { goals, ranks, seedAppData, startRealtimeSync, todayEntry } from '$lib/stores/app-data';
+	import {
+		entries,
+		goals,
+		ranks,
+		seedAppData,
+		startRealtimeSync,
+		todayEntry
+	} from '$lib/stores/app-data';
 	import type { Entry } from '$lib/types/entry.js';
+	import { SvelteDate } from 'svelte/reactivity';
 
 	const { children, data } = $props();
 
 	const currentRanks = $derived($ranks);
 	const currentGoals = $derived($goals);
 	const currentTodayEntry = $derived($todayEntry);
+	const currentEntries = $derived($entries);
 	const todayXp = $derived(() => {
 		let xp = 0;
 
@@ -64,7 +73,43 @@
 		return GetCurrentRank(todayXp(), currentRanks);
 	});
 	const streak = $derived(() => {
-		return 1; // Placeholder, implement streak logic based on user data
+		if (!currentEntries.length || !currentGoals.length) return 0;
+
+		const goalsCount = currentGoals.length;
+		const entriesByDate = new Map(currentEntries.map((entry) => [entry.dateKey, entry]));
+
+		const isCompleteDay = (entry: Entry) => {
+			if (entry.actions.length < goalsCount) return false;
+
+			return currentGoals.every((goal) => {
+				const action = entry.actions.find((item) => item.goalId === goal.id);
+				return !!action && action.progress >= goal.max;
+			});
+		};
+
+		const isDayCompleteByKey = (dateKey: string) => {
+			const entry = entriesByDate.get(dateKey);
+			return entry ? isCompleteDay(entry) : false;
+		};
+
+		const today = new SvelteDate();
+		today.setHours(0, 0, 0, 0);
+
+		let streakCount = 0;
+
+		while (true) {
+			const date = new SvelteDate(today);
+			date.setDate(today.getDate() - streakCount);
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			const dateKey = `${year}-${month}-${day}`;
+
+			if (!isDayCompleteByKey(dateKey)) break;
+			streakCount += 1;
+		}
+
+		return streakCount;
 	});
 	const completed = $derived(() => {
 		return (todayXp() / (currentGoals.length * 100)) * 100; // Placeholder, calculate based on completed goals
@@ -72,7 +117,7 @@
 
 	// onMount handled above
 
-	const todayString = new Date().toLocaleDateString('cs-CZ', {
+	const todayString = new SvelteDate().toLocaleDateString('cs-CZ', {
 		weekday: 'long',
 		month: 'long',
 		day: 'numeric',

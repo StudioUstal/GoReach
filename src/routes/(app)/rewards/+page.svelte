@@ -2,7 +2,7 @@
 	import { GetCurrentRank } from '$lib/services/rank.service';
 	import { SubscribeToWeeklyEntries } from '$lib/services/firestore.service';
 	import { GetWeekKey, GetTodayKey } from '$lib/utils/keys';
-	import { goals, ranks, todayEntry } from '$lib/stores/app-data';
+	import { goals, ranks } from '$lib/stores/app-data';
 	import { onMount } from 'svelte';
 	import type { Entry } from '$lib/types/entry.js';
 
@@ -10,22 +10,25 @@
 
 	const currentRanks = $derived([...$ranks].sort((a, b) => a.requiredXp - b.requiredXp));
 	const currentGoals = $derived($goals);
-	const currentTodayEntry = $derived($todayEntry);
-
-	const todayXp = $derived(() => {
-		let xp = 0;
-
-		currentTodayEntry?.actions.forEach((action) => {
-			const goal = currentGoals.find((g) => g.id === action.goalId);
-			if (goal && action.progress > 0 && action.progress >= goal.max) {
-				xp += 100;
-			}
-		});
-
-		return xp;
-	});
 
 	let weeklyEntriesLocal = $state<Entry[]>([]);
+
+	const currentAverageXp = $derived(() => {
+		if (!weeklyEntriesLocal.length) return 0;
+
+		let totalXp = 0;
+
+		weeklyEntriesLocal.forEach((entry) => {
+			entry.actions.forEach((action) => {
+				const goal = currentGoals.find((g) => g.id === action.goalId);
+				if (goal && action.progress > 0 && action.progress >= goal.max) {
+					totalXp += 100;
+				}
+			});
+		});
+
+		return totalXp / weeklyEntriesLocal.length;
+	});
 
 	onMount(() => {
 		const weekStart = GetWeekKey();
@@ -44,8 +47,6 @@
 				...currentRanks
 			]);
 		}
-
-		return GetCurrentRank(todayXp(), [...currentRanks]);
 	});
 
 	const currentRankIndex = $derived(() =>
@@ -61,7 +62,7 @@
 			<div class="text-3xl">{rank.icon}</div>
 			<div>
 				<div class="text-lg font-bold text-white">{rank.displayName}</div>
-				<div class="text-sm text-neutral-500">Vyžaduje {rank.requiredXp} XP / den</div>
+				<div class="text-sm text-neutral-500">Vyžaduje průměrných {rank.requiredXp} XP / týden</div>
 			</div>
 
 			<div class="ml-auto text-sm font-bold text-green-500">✓ Odemčeno</div>
@@ -73,11 +74,11 @@
 			<div class="text-3xl">{rank.icon}</div>
 			<div>
 				<div class="text-lg font-bold text-white">{rank.displayName}</div>
-				<div class="text-sm text-neutral-500">Vyžaduje {rank.requiredXp} XP / den</div>
+				<div class="text-sm text-neutral-500">Vyžaduje průměrných {rank.requiredXp} XP / týden</div>
 			</div>
 
 			<div class="ml-auto text-base font-bold text-orange-600">
-				{rank.requiredXp - todayXp()} XP
+				{Math.max(0, rank.requiredXp - currentAverageXp())} XP
 			</div>
 		</div>
 	{:else}
@@ -87,7 +88,9 @@
 			<div class="text-3xl opacity-50">{rank.icon}</div>
 			<div>
 				<div class="text-lg font-bold text-white opacity-50">{rank.displayName}</div>
-				<div class="text-sm text-neutral-500 opacity-50">Vyžaduje {rank.requiredXp} XP / den</div>
+				<div class="text-sm text-neutral-500 opacity-50">
+					Vyžaduje průměrných {rank.requiredXp} XP / týden
+				</div>
 			</div>
 
 			<div class="ml-auto text-xl">🔒</div>
