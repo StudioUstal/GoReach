@@ -6,6 +6,7 @@
 	import { isActive } from '$lib/utils/paths';
 	import { GetCurrentRank } from '$lib/services/rank.service.js';
 	import { GetTodayKey, GetWeekKey } from '$lib/utils/keys';
+	import { buildDateRange } from './week/utils';
 	import {
 		entries,
 		goals,
@@ -39,6 +40,7 @@
 	});
 
 	let weeklyEntriesLocal = $state<Entry[]>([]);
+	let totalDaysInWeek = 0;
 
 	onMount(() => {
 		seedAppData(data);
@@ -46,6 +48,7 @@
 
 		const weekStart = GetWeekKey();
 		const weekEnd = GetTodayKey();
+		totalDaysInWeek = buildDateRange(weekStart, weekEnd).length;
 
 		const unsubscribeEntriesForWeek = entries.subscribe((allEntries) => {
 			weeklyEntriesLocal = allEntries.filter((e) => e.dateKey >= weekStart && e.dateKey <= weekEnd);
@@ -63,8 +66,11 @@
 
 	const rank = $derived(() => {
 		const goalsArr = currentGoals;
-		if (weeklyEntriesLocal && weeklyEntriesLocal.length) {
-			return GetCurrentRank({ weeklyEntries: weeklyEntriesLocal, goals: goalsArr }, currentRanks);
+		if (weeklyEntriesLocal && totalDaysInWeek) {
+			return GetCurrentRank(
+				{ weeklyEntries: weeklyEntriesLocal, goals: goalsArr, totalDays: totalDaysInWeek },
+				currentRanks
+			);
 		}
 
 		return GetCurrentRank(todayXp(), currentRanks);

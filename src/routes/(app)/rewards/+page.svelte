@@ -4,14 +4,16 @@
 	import { goals, ranks, entries } from '$lib/stores/app-data';
 	import { onMount } from 'svelte';
 	import type { Entry } from '$lib/types/entry.js';
+	import { buildDateRange } from '../week/utils';
 
 	const currentRanks = $derived([...$ranks].sort((a, b) => a.requiredXp - b.requiredXp));
 	const currentGoals = $derived($goals);
 
 	let weeklyEntriesLocal = $state<Entry[]>([]);
+	let totalDaysInWeek = 0;
 
 	const currentAverageXp = $derived(() => {
-		if (!weeklyEntriesLocal.length) return 0;
+		if (!totalDaysInWeek) return 0;
 
 		let totalXp = 0;
 
@@ -24,12 +26,13 @@
 			});
 		});
 
-		return totalXp / weeklyEntriesLocal.length;
+		return totalXp / totalDaysInWeek;
 	});
 
 	onMount(() => {
 		const weekStart = GetWeekKey();
 		const weekEnd = GetTodayKey();
+		totalDaysInWeek = buildDateRange(weekStart, weekEnd).length;
 
 		const unsubscribe = entries.subscribe((allEntries) => {
 			weeklyEntriesLocal = allEntries.filter((e) => e.dateKey >= weekStart && e.dateKey <= weekEnd);
@@ -40,10 +43,11 @@
 
 	const currentRank = $derived(() => {
 		const goalsArr = currentGoals;
-		if (weeklyEntriesLocal && weeklyEntriesLocal.length) {
-			return GetCurrentRank({ weeklyEntries: weeklyEntriesLocal, goals: goalsArr }, [
-				...currentRanks
-			]);
+		if (weeklyEntriesLocal && totalDaysInWeek) {
+			return GetCurrentRank(
+				{ weeklyEntries: weeklyEntriesLocal, goals: goalsArr, totalDays: totalDaysInWeek },
+				[...currentRanks]
+			);
 		}
 	});
 

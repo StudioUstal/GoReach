@@ -2,6 +2,8 @@
 	import { goals } from '$lib/stores/app-data';
 	import type { Entry } from '$lib/types/entry.js';
 	import { onMount } from 'svelte';
+	import { GetWeekKey, GetTodayKey } from '$lib/utils/keys';
+	import { buildDateRange } from './utils';
 
 	const { data } = $props();
 
@@ -12,32 +14,27 @@
 	>({});
 
 	const MapTaskStats = (weeklyEntries: Entry[]) => {
-		weeklyEntries.forEach((entry) => {
-			const dateKey = entry.dateKey;
-			const actions = entry.actions;
+		// reset
+		tasksStats = {};
 
-			actions.forEach((action) => {
-				const goal = $goals.find((g) => g.id === action.goalId);
+		const weekStart = GetWeekKey();
+		const weekEnd = GetTodayKey();
+		const dateKeys = buildDateRange(weekStart, weekEnd);
 
-				if (goal) {
-					const progress = action.progress || 0;
-					const max = goal.max || 0;
-					const progressColor = goal.progressColor;
-					const key = `${goal.icon} ${goal.name}`;
-
-					if (!tasksStats[key]) {
-						tasksStats[key] = [];
-					}
-
-					tasksStats[key].push({
-						dateKey,
-						progress,
-						progressColor,
-						max
-					});
-				}
+		for (const goal of $goals) {
+			const key = `${goal.icon} ${goal.name}`;
+			tasksStats[key] = dateKeys.map((dateKey) => {
+				const entry = weeklyEntries.find((e) => e.dateKey === dateKey);
+				const action = entry ? entry.actions.find((a) => a.goalId === goal.id) : undefined;
+				const progress = action ? action.progress || 0 : 0;
+				return {
+					dateKey,
+					progress,
+					progressColor: goal.progressColor,
+					max: goal.max || 0
+				};
 			});
-		});
+		}
 	};
 
 	onMount(() => {

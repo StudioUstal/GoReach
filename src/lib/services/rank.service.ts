@@ -3,7 +3,7 @@ import type { Entry } from '$lib/types/entry';
 import type { Goal } from '$lib/types/goal';
 
 export const GetCurrentRank = (
-	xpOrWeekly: number | { weeklyEntries: Entry[]; goals: Goal[] },
+	xpOrWeekly: number | { weeklyEntries: Entry[]; goals: Goal[]; totalDays?: number },
 	ranks: Rank[]
 ) => {
 	let xp = 0;
@@ -11,7 +11,7 @@ export const GetCurrentRank = (
 	if (typeof xpOrWeekly === 'number') {
 		xp = xpOrWeekly;
 	} else {
-		const { weeklyEntries, goals } = xpOrWeekly;
+		const { weeklyEntries, goals, totalDays } = xpOrWeekly;
 
 		const dailyXps = weeklyEntries.map((entry) => {
 			let dayXp = 0;
@@ -25,7 +25,8 @@ export const GetCurrentRank = (
 		});
 
 		const sum = dailyXps.reduce((a, b) => a + b, 0);
-		xp = weeklyEntries.length ? sum / weeklyEntries.length : 0;
+		const divisor = totalDays || weeklyEntries.length;
+		xp = divisor ? sum / divisor : 0;
 	}
 
 	// Sort ranks by requiredXp in descending order
