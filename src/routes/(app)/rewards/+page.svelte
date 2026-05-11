@@ -67,7 +67,7 @@
 				<div class="text-sm text-neutral-500">Vyžaduje průměrných {rank.requiredXp} XP / týden</div>
 			</div>
 
-			<div class="ml-auto text-sm font-bold text-green-500">✓ Odemčeno</div>
+			<div class="ml-auto text-right text-sm font-bold text-green-500">✓ Odemčeno</div>
 		</div>
 	{:else if index === currentRankIndex() + 1}
 		<div
@@ -79,7 +79,7 @@
 				<div class="text-sm text-neutral-500">Vyžaduje průměrných {rank.requiredXp} XP / týden</div>
 			</div>
 
-			<div class="ml-auto text-base font-bold text-orange-600">
+			<div class="ml-auto text-right text-base font-bold text-orange-600">
 				{Math.max(0, rank.requiredXp - currentAverageXp()).toFixed(2)} XP
 			</div>
 		</div>
