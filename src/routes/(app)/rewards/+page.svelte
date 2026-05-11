@@ -1,12 +1,9 @@
 <script lang="ts">
 	import { GetCurrentRank } from '$lib/services/rank.service';
-	import { SubscribeToWeeklyEntries } from '$lib/services/firestore.service';
 	import { GetWeekKey, GetTodayKey } from '$lib/utils/keys';
-	import { goals, ranks } from '$lib/stores/app-data';
+	import { goals, ranks, entries } from '$lib/stores/app-data';
 	import { onMount } from 'svelte';
 	import type { Entry } from '$lib/types/entry.js';
-
-	const { data } = $props();
 
 	const currentRanks = $derived([...$ranks].sort((a, b) => a.requiredXp - b.requiredXp));
 	const currentGoals = $derived($goals);
@@ -33,8 +30,9 @@
 	onMount(() => {
 		const weekStart = GetWeekKey();
 		const weekEnd = GetTodayKey();
-		const unsubscribe = SubscribeToWeeklyEntries(data.user.uid, weekStart, weekEnd, (entries) => {
-			weeklyEntriesLocal = entries;
+
+		const unsubscribe = entries.subscribe((allEntries) => {
+			weeklyEntriesLocal = allEntries.filter((e) => e.dateKey >= weekStart && e.dateKey <= weekEnd);
 		});
 
 		return () => unsubscribe();

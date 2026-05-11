@@ -5,7 +5,6 @@
 	import { NAV_LINKS } from '$lib/utils/links';
 	import { isActive } from '$lib/utils/paths';
 	import { GetCurrentRank } from '$lib/services/rank.service.js';
-	import { SubscribeToWeeklyEntries } from '$lib/services/firestore.service.js';
 	import { GetTodayKey, GetWeekKey } from '$lib/utils/keys';
 	import {
 		entries,
@@ -13,8 +12,10 @@
 		ranks,
 		seedAppData,
 		startRealtimeSync,
-		todayEntry
+		todayEntry,
+		realtimeReady
 	} from '$lib/stores/app-data';
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import type { Entry } from '$lib/types/entry.js';
 	import { SvelteDate } from 'svelte/reactivity';
 
@@ -45,14 +46,10 @@
 
 		const weekStart = GetWeekKey();
 		const weekEnd = GetTodayKey();
-		const unsubscribeWeekly = SubscribeToWeeklyEntries(
-			data.user.uid,
-			weekStart,
-			weekEnd,
-			(entries) => {
-				weeklyEntriesLocal = entries;
-			}
-		);
+
+		const unsubscribeEntriesForWeek = entries.subscribe((allEntries) => {
+			weeklyEntriesLocal = allEntries.filter((e) => e.dateKey >= weekStart && e.dateKey <= weekEnd);
+		});
 
 		navigator.serviceWorker.register(dev ? '/service-worker.js' : `${base}/service-worker.js`, {
 			type: dev ? 'module' : 'classic'
@@ -60,7 +57,7 @@
 
 		return () => {
 			stopRealtimeSync();
-			unsubscribeWeekly();
+			unsubscribeEntriesForWeek();
 		};
 	});
 
@@ -72,6 +69,7 @@
 
 		return GetCurrentRank(todayXp(), currentRanks);
 	});
+
 	const streak = $derived(() => {
 		if (!currentEntries.length || !currentGoals.length) return 0;
 
@@ -111,11 +109,10 @@
 
 		return streakCount;
 	});
+
 	const completed = $derived(() => {
 		return (todayXp() / (currentGoals.length * 100)) * 100; // Placeholder, calculate based on completed goals
 	});
-
-	// onMount handled above
 
 	const todayString = new SvelteDate().toLocaleDateString('cs-CZ', {
 		weekday: 'long',
@@ -131,6 +128,14 @@
 </svelte:head>
 
 <div class="app relative h-screen">
+	{#if !$realtimeReady}
+		<div class="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
+			<div class="flex flex-col items-center gap-4">
+				<LoadingSpinner size={48} />
+				<div class="text-sm text-neutral-300">Načítání aplikace…</div>
+			</div>
+		</div>
+	{/if}
 	<header class="t-2 sticky top-0 z-2 bg-[#0d0d0d] p-4">
 		<div class="flex items-center justify-between gap-4">
 			<div class="flex flex-col gap-1">

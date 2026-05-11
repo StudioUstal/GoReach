@@ -5,8 +5,6 @@ import { GetTodayKey } from '$lib/utils/keys';
 import { redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
 
-export const ssr = false;
-
 export const load = async ({ depends }) => {
 	depends('app:layout');
 	const currentUser = await waitForAuthUser();
