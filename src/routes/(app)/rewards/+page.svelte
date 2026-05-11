@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { GetCurrentRank } from '$lib/services/rank.service';
+	import { SubscribeToWeeklyEntries } from '$lib/services/firestore.service';
+	import { GetWeekKey, GetTodayKey } from '$lib/utils/keys';
 	import { goals, ranks, todayEntry } from '$lib/stores/app-data';
+	import { onMount } from 'svelte';
+	import type { Entry } from '$lib/types/entry.js';
+
+	const { data } = $props();
 
 	const currentRanks = $derived([...$ranks].sort((a, b) => a.requiredXp - b.requiredXp));
 	const currentGoals = $derived($goals);
@@ -19,7 +25,29 @@
 		return xp;
 	});
 
-	const currentRank = $derived(() => GetCurrentRank(todayXp(), [...currentRanks]));
+	let weeklyEntriesLocal = $state<Entry[]>([]);
+
+	onMount(() => {
+		const weekStart = GetWeekKey();
+		const weekEnd = GetTodayKey();
+		const unsubscribe = SubscribeToWeeklyEntries(data.user.uid, weekStart, weekEnd, (entries) => {
+			weeklyEntriesLocal = entries;
+		});
+
+		return () => unsubscribe();
+	});
+
+	const currentRank = $derived(() => {
+		const goalsArr = currentGoals;
+		if (weeklyEntriesLocal && weeklyEntriesLocal.length) {
+			return GetCurrentRank({ weeklyEntries: weeklyEntriesLocal, goals: goalsArr }, [
+				...currentRanks
+			]);
+		}
+
+		return GetCurrentRank(todayXp(), [...currentRanks]);
+	});
+
 	const currentRankIndex = $derived(() =>
 		currentRanks.findIndex((rank) => rank.displayName === currentRank()?.displayName)
 	);

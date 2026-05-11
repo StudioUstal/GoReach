@@ -19,17 +19,6 @@
 		return Math.min((progress / goal.max) * 100, 100);
 	}
 
-	const colorMap: Record<string, string> = {
-		'text-orange-500': '#f97316',
-		'text-blue-500': '#3b82f6',
-		'text-purple-500': '#a855f7',
-		'text-yellow-600': '#ca8a04'
-	};
-
-	function themeColor() {
-		return colorMap[goal.progressColor || 'text-orange-500'] || colorMap['text-orange-500'];
-	}
-
 	let updating = $state(false);
 
 	async function setProgress(level: number) {
@@ -78,7 +67,7 @@
 	<div class="mt-4 h-1 w-full rounded-full bg-neutral-800">
 		<div
 			class="h-full rounded-full transition-all"
-			style="width: {progressPercentage()}%; background-color: {themeColor()}"
+			style="width: {progressPercentage()}%; background-color: {goal.progressColor || '#f97316'}"
 		></div>
 	</div>
 
@@ -89,7 +78,7 @@
 				disabled={updating}
 				class="h-6 w-6 cursor-pointer appearance-none rounded-md border-2 border-neutral-700 bg-neutral-800 transition-all focus:ring-0 focus:outline-none"
 				style={level <= progress
-					? `background-color: ${themeColor()}; border-color: ${themeColor()}`
+					? `background-color: ${goal.progressColor || '#f97316'}; border-color: ${goal.progressColor || '#f97316'}`
 					: ''}
 				aria-pressed={level <= progress}
 				onclick={() => setProgress(level)}

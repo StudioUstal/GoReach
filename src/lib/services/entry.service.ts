@@ -33,3 +33,19 @@ export const UpsertEntry = async (dateKey: string, entry_actions: EntryAction[])
 		});
 	});
 };
+
+export const DeleteEntry = async (dateKey: string) => {
+	if (!auth || !db) throw new Error('Firebase not initialized');
+
+	const user = auth.currentUser;
+
+	if (!user) {
+		throw new Error('User is not authenticated');
+	}
+
+	const entryRef = doc(db, 'users', user.uid, 'entries', dateKey);
+
+	await runTransaction(db, async (transaction) => {
+		transaction.delete(entryRef);
+	});
+};

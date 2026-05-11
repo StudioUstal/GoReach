@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import AddTaskCard from '$lib/components/AddTaskCard.svelte';
+	import AllowNotificationsCard from '$lib/components/AllowNotificationsCard.svelte';
+	import DeleteTodayDataCard from '$lib/components/DeleteTodayDataCard.svelte';
+	import TaskListCard from '$lib/components/TaskListCard.svelte';
 	import { Logout } from '$lib/services/auth.service';
 
 	const { data } = $props();
@@ -26,7 +30,7 @@
 	<title>GoReach - Nastavení</title>
 </svelte:head>
 
-<div class="mx-auto max-w-md sm:w-full sm:max-w-full">
+<div class="mx-auto flex max-w-md flex-col gap-4 sm:w-full sm:max-w-full">
 	<div
 		class="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-black/20 backdrop-blur-md"
 	>
@@ -64,4 +68,12 @@
 			</button>
 		</div>
 	</div>
+
+	<TaskListCard />
+
+	<AddTaskCard />
+
+	<AllowNotificationsCard />
+
+	<DeleteTodayDataCard />
 </div>

@@ -5,7 +5,10 @@
 	import { NAV_LINKS } from '$lib/utils/links';
 	import { isActive } from '$lib/utils/paths';
 	import { GetCurrentRank } from '$lib/services/rank.service.js';
+	import { SubscribeToWeeklyEntries } from '$lib/services/firestore.service.js';
+	import { GetTodayKey, GetWeekKey } from '$lib/utils/keys';
 	import { goals, ranks, seedAppData, startRealtimeSync, todayEntry } from '$lib/stores/app-data';
+	import type { Entry } from '$lib/types/entry.js';
 
 	const { children, data } = $props();
 
@@ -24,7 +27,42 @@
 
 		return xp;
 	});
-	const rank = $derived(() => GetCurrentRank(todayXp(), currentRanks));
+
+	let weeklyEntriesLocal = $state<Entry[]>([]);
+
+	onMount(() => {
+		seedAppData(data);
+		const stopRealtimeSync = startRealtimeSync(data.user.uid);
+
+		const weekStart = GetWeekKey();
+		const weekEnd = GetTodayKey();
+		const unsubscribeWeekly = SubscribeToWeeklyEntries(
+			data.user.uid,
+			weekStart,
+			weekEnd,
+			(entries) => {
+				weeklyEntriesLocal = entries;
+			}
+		);
+
+		navigator.serviceWorker.register(dev ? '/service-worker.js' : `${base}/service-worker.js`, {
+			type: dev ? 'module' : 'classic'
+		});
+
+		return () => {
+			stopRealtimeSync();
+			unsubscribeWeekly();
+		};
+	});
+
+	const rank = $derived(() => {
+		const goalsArr = currentGoals;
+		if (weeklyEntriesLocal && weeklyEntriesLocal.length) {
+			return GetCurrentRank({ weeklyEntries: weeklyEntriesLocal, goals: goalsArr }, currentRanks);
+		}
+
+		return GetCurrentRank(todayXp(), currentRanks);
+	});
 	const streak = $derived(() => {
 		return 1; // Placeholder, implement streak logic based on user data
 	});
@@ -32,16 +70,7 @@
 		return (todayXp() / (currentGoals.length * 100)) * 100; // Placeholder, calculate based on completed goals
 	});
 
-	onMount(() => {
-		seedAppData(data);
-
-		const stopRealtimeSync = startRealtimeSync(data.user.uid);
-		navigator.serviceWorker.register(dev ? '/service-worker.js' : `${base}/service-worker.js`, {
-			type: dev ? 'module' : 'classic'
-		});
-
-		return stopRealtimeSync;
-	});
+	// onMount handled above
 
 	const todayString = new Date().toLocaleDateString('cs-CZ', {
 		weekday: 'long',
@@ -57,7 +86,7 @@
 </svelte:head>
 
 <div class="app relative h-screen">
-	<header class="t-2 sticky top-0 bg-[#0d0d0d] p-4">
+	<header class="t-2 sticky top-0 z-2 bg-[#0d0d0d] p-4">
 		<div class="flex items-center justify-between gap-4">
 			<div class="flex flex-col gap-1">
 				<span class="text-sm text-neutral-500 uppercase">{todayString}</span>
@@ -113,7 +142,7 @@
 		{@render children()}
 	</main>
 	<footer
-		class="fixed bottom-0 grid w-full grid-cols-4 gap-4 border-t border-neutral-800 bg-neutral-900"
+		class="fixed bottom-0 grid w-full grid-cols-4 border-t border-neutral-800 bg-neutral-900 sm:gap-4"
 	>
 		{#each NAV_LINKS as link (link.href)}
 			<a href={resolve(link.href)} class="flex flex-col items-center gap-1 p-4">

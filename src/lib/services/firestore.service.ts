@@ -76,6 +76,24 @@ export const SubscribeToGoals = (
 	});
 };
 
+export const SubscribeToWeeklyEntries = (
+	userId: string,
+	weekStartKey: string,
+	weekEndKey: string,
+	onUpdate: (entries: Entry[]) => void
+): Unsubscribe => {
+	if (!db) throw new Error('Firebase not initialized');
+	const entriesRef = collection(db, 'users', userId, 'entries');
+
+	return onSnapshot(entriesRef, (snapshot) => {
+		const weeklyEntries = snapshot.docs
+			.filter((doc) => doc.id >= weekStartKey && doc.id <= weekEndKey)
+			.map((doc) => normalizeEntry(doc.id, doc.data()));
+
+		onUpdate(weeklyEntries);
+	});
+};
+
 export const SubscribeToTodayEntry = (
 	userId: string,
 	dateKey: string,

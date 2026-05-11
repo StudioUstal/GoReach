@@ -1,13 +1,37 @@
 import type { Rank } from '$lib/types/rank';
+import type { Entry } from '$lib/types/entry';
+import type { Goal } from '$lib/types/goal';
 
-export const GetCurrentRank = (xp: number, ranks: Rank[]) => {
-	// Sort ranks by requiredXP in descending order
-	const sortedRanks = ranks.sort((a, b) => b.requiredXp - a.requiredXp);
+export const GetCurrentRank = (
+	xpOrWeekly: number | { weeklyEntries: Entry[]; goals: Goal[] },
+	ranks: Rank[]
+) => {
+	let xp = 0;
 
-	// Find the highest rank that the user qualifies for
+	if (typeof xpOrWeekly === 'number') {
+		xp = xpOrWeekly;
+	} else {
+		const { weeklyEntries, goals } = xpOrWeekly;
+
+		const dailyXps = weeklyEntries.map((entry) => {
+			let dayXp = 0;
+			for (const action of entry.actions) {
+				const goal = goals.find((g) => g.id === action.goalId);
+				if (goal && action.progress >= goal.max) {
+					dayXp += 100;
+				}
+			}
+			return dayXp;
+		});
+
+		const sum = dailyXps.reduce((a, b) => a + b, 0);
+		xp = weeklyEntries.length ? sum / weeklyEntries.length : 0;
+	}
+
+	// Sort ranks by requiredXp in descending order
+	const sortedRanks = [...ranks].sort((a, b) => b.requiredXp - a.requiredXp);
+
 	for (const rank of sortedRanks) {
-		if (xp >= rank.requiredXp) {
-			return rank;
-		}
+		if (xp >= rank.requiredXp) return rank;
 	}
 };
