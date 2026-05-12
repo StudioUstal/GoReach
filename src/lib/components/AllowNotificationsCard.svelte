@@ -24,9 +24,12 @@
 
 			if (!token) {
 				errorMessage = 'Nepodařilo se získat token pro notifikace.';
+				notificationStatus = 'denied';
+				return;
 			}
 
 			SaveNotificationToken(token);
+			notificationStatus = 'granted';
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : 'Nepodařilo se povolit notifikace.';
 		} finally {
@@ -45,6 +48,7 @@
 
 			if (token) {
 				await RemoveNotificationToken(userId, token);
+				notificationStatus = 'default';
 			}
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : 'Nepodařilo se zakázat notifikace.';
