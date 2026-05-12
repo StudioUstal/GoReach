@@ -2,7 +2,7 @@ import { browser } from '$app/environment';
 import { base } from '$app/paths';
 import { PUBLIC_FIREBASE_VAPID_KEY } from '$env/static/public';
 import { db, getMessagingIfSupported } from '$lib/firebase';
-import { arrayUnion, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { arrayRemove, arrayUnion, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getToken } from 'firebase/messaging';
 
 export async function EnableNotifications(userId: string) {
@@ -57,7 +57,7 @@ export const RemoveNotificationToken = async (userId: string, token: string) => 
 	await setDoc(
 		doc(db, 'users', userId),
 		{
-			fcmTokens: arrayUnion(token),
+			fcmTokens: arrayRemove(token),
 			lastTokenUpdateAt: serverTimestamp()
 		},
 		{ merge: true }

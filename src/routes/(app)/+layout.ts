@@ -1,14 +1,30 @@
-import { waitForAuthUser } from '$lib/services/auth.service';
+import { auth } from '$lib/stores/auth';
 import { GetEntries, GetGoals, GetRanks, GetTodayEntry } from '$lib/services/firestore.service';
 import type { User } from '$lib/types/user';
 import { GetTodayKey } from '$lib/utils/keys';
 import { redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
+import { get } from 'svelte/store';
 
 export const load = async ({ depends }) => {
 	depends('app:layout');
-	const currentUser = await waitForAuthUser();
 
+	// Wait for auth to be initialized
+	let authState = get(auth);
+	if (!authState.initialized) {
+		// Wait for initialization to complete
+		await new Promise<void>((resolve) => {
+			const unsubscribe = auth.subscribe((state) => {
+				if (state.initialized) {
+					unsubscribe();
+					resolve();
+				}
+			});
+		});
+		authState = get(auth);
+	}
+
+	const currentUser = authState.user;
 	if (!currentUser) {
 		throw redirect(302, resolve('/login'));
 	}

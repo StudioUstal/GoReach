@@ -117,7 +117,7 @@
 	});
 
 	const completed = $derived(() => {
-		return (todayXp() / (currentGoals.length * 100)) * 100; // Placeholder, calculate based on completed goals
+		return ((todayXp() ?? 0) / (currentGoals.length * 100)) * 100; // Placeholder, calculate based on completed goals
 	});
 
 	const todayString = new SvelteDate().toLocaleDateString('cs-CZ', {

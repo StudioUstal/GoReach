@@ -16,7 +16,7 @@
 	let progress = $derived(currentGoalEntry()?.progress);
 
 	function progressPercentage() {
-		return Math.min((progress / goal.max) * 100, 100);
+		return Math.min(((progress ?? 0) / goal.max) * 100, 100);
 	}
 
 	let updating = $state(false);
@@ -58,7 +58,7 @@
 		</div>
 		<div class="text-center text-sm text-neutral-500">
 			<div class={`text-2xl font-bold ${goal.progressColor || 'text-orange-500'}`}>
-				{progress}
+				{progress ?? 0}
 			</div>
 			/{goal.max}
 		</div>

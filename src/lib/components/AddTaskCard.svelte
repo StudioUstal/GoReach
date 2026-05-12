@@ -36,6 +36,7 @@
 				id="task-title"
 				name="task-title"
 				placeholder="Název tasku"
+				maxlength="50"
 				required
 				bind:value={title}
 				class="block w-full max-w-64 rounded-xl border border-neutral-700 bg-neutral-800 py-2 text-sm text-white shadow-sm ring-neutral-500 placeholder:text-neutral-500 focus:ring-1"
@@ -48,6 +49,8 @@
 				type="text"
 				id="task-emoji"
 				name="task-emoji"
+				maxlength="2"
+				required
 				bind:value={emoji}
 				class="block w-full max-w-15 rounded-xl border border-neutral-700 bg-neutral-800 py-2 text-center text-sm text-white shadow-sm ring-neutral-500 placeholder:text-neutral-500 focus:ring-1"
 			/>
@@ -68,13 +71,20 @@
 
 		<div class="flex items-center justify-between gap-5 border-b border-white/8 py-3">
 			<label for="task-color" class="block text-sm font-medium text-neutral-300">Barva</label>
-			<input
-				type="color"
-				id="task-color"
-				name="task-color"
-				bind:value={progressColor}
-				class="block h-full w-full max-w-15 rounded-xl border border-neutral-700 bg-neutral-800 py-2 text-center text-sm shadow-sm ring-neutral-500 focus:ring-1"
-			/>
+			<div class="flex items-center gap-3">
+				<div
+					class="h-10 w-10 shrink-0 rounded-xl border border-white/10 shadow-sm"
+					style={`background-color: ${progressColor}`}
+					aria-hidden="true"
+				></div>
+				<input
+					type="color"
+					id="task-color"
+					name="task-color"
+					bind:value={progressColor}
+					class="block h-10 w-12 cursor-pointer overflow-hidden rounded-xl border border-neutral-700 bg-neutral-800 p-0 shadow-sm ring-neutral-500 focus:ring-1"
+				/>
+			</div>
 		</div>
 
 		<div class="flex items-center justify-between gap-5 py-3">

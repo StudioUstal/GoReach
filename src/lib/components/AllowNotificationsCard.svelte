@@ -11,7 +11,7 @@
 
 	let errorMessage = $state<string>('');
 	let isSubmitting = $state(false);
-	let notificationStatus = $derived<'default' | 'granted' | 'denied'>(Notification.permission);
+	let notificationStatus = $derived(GetNotificationToken());
 
 	const HandleAllowNotifications = async () => {
 		if (!browser || !userId || isSubmitting) return;
@@ -48,7 +48,7 @@
 
 			if (token) {
 				await RemoveNotificationToken(userId, token);
-				notificationStatus = 'default';
+				notificationStatus = null;
 			}
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : 'Nepodařilo se zakázat notifikace.';
@@ -62,22 +62,23 @@
 	<h2 class="text-sm font-bold text-neutral-500 uppercase">Notifikace</h2>
 
 	<div class="mt-4 flex items-center justify-between gap-4">
-		<span class="text-sm font-medium text-white">🔔 Povolit notifikace</span>
-		{#if notificationStatus === 'granted'}
+		<div class="flex min-w-0 flex-wrap items-center gap-2 text-sm font-medium text-white">
+			<span class="shrink-0">🔔 Povolit notifikace</span>
+			{#if notificationStatus}
+				<div
+					class="shrink-0 rounded-2xl bg-green-600 px-3 py-1 text-center text-sm font-bold text-white"
+				>
+					Povoleno
+				</div>
+			{/if}
+		</div>
+		{#if notificationStatus}
 			<button
-				onclick={HandleAllowNotifications}
-				disabled={isSubmitting}
-				class="w-full max-w-24 cursor-pointer rounded-2xl bg-green-600 py-2 text-sm font-bold text-white"
-			>
-				Povoleno
-			</button>
-		{:else if notificationStatus === 'denied'}
-			<button
-				onclick={HandleAllowNotifications}
+				onclick={HandleDisableNotifications}
 				disabled={isSubmitting}
 				class="w-full max-w-24 cursor-pointer rounded-2xl bg-red-600 py-2 text-sm font-bold text-white"
 			>
-				Zamítnuto
+				Zrušit
 			</button>
 		{:else}
 			<button

@@ -6,7 +6,8 @@ import {
 	limit,
 	orderBy,
 	query,
-	runTransaction
+	runTransaction,
+	Timestamp
 } from 'firebase/firestore';
 
 export const CreateTask = async (
@@ -40,7 +41,8 @@ export const CreateTask = async (
 			icon: emoji,
 			max: target,
 			time,
-			progressColor
+			progressColor,
+			lastReminderSentAt: Timestamp.now()
 		});
 	});
 };
