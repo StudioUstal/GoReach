@@ -102,7 +102,18 @@ async function processUserReminders(userDoc: QueryDocumentSnapshot<DocumentData>
 		return { notifiedGoals: 0 };
 	}
 
-	const goals = Array.isArray(userData.goals) ? userData.goals : [];
+	// Goals are stored as a subcollection `goals` under each user document
+	const goalsSnapshot = await userDoc.ref.collection('goals').get();
+	const goals: ReminderGoal[] = goalsSnapshot.docs.map((d) => {
+		const data = d.data();
+		return {
+			id: d.id,
+			title: (data.title as string) ?? '',
+			time: (data.time as string) ?? undefined,
+			enabled: typeof data.enabled === 'boolean' ? (data.enabled as boolean) : undefined,
+			lastReminderSentAt: (data.lastReminderSentAt as Timestamp) ?? null
+		} as ReminderGoal;
+	});
 	if (goals.length === 0) {
 		return { notifiedGoals: 0 };
 	}
@@ -162,37 +173,22 @@ async function processUserReminders(userDoc: QueryDocumentSnapshot<DocumentData>
 		}
 
 		const freshData = freshSnapshot.data() as ReminderUser;
-		const freshGoals = Array.isArray(freshData.goals) ? freshData.goals : [];
 		const freshTokens = Array.isArray(freshData.fcmTokens) ? freshData.fcmTokens : [];
 		const reminderSentAt = Timestamp.now();
 
-		const updatedGoals = goalsToMarkSent.size
-			? freshGoals.map((goal) =>
-					goalsToMarkSent.has(goal.id)
-						? {
-								...goal,
-								lastReminderSentAt: reminderSentAt
-							}
-						: goal
-				)
-			: freshGoals;
-
-		const updatedTokens = tokensToRemove.size
-			? freshTokens.filter((token) => !tokensToRemove.has(token))
-			: freshTokens;
-
-		const updateData: Partial<ReminderUser> = {};
-
-		if (goalsToMarkSent.size > 0) {
-			updateData.goals = updatedGoals;
+		// Update each goal document's `lastReminderSentAt` field
+		for (const goalId of goalsToMarkSent) {
+			const goalRef = userRef.collection('goals').doc(goalId);
+			const goalSnap = await transaction.get(goalRef);
+			if (goalSnap.exists) {
+				transaction.update(goalRef, { lastReminderSentAt: reminderSentAt });
+			}
 		}
 
+		// Update user's tokens if any invalid ones were detected
 		if (tokensToRemove.size > 0) {
-			updateData.fcmTokens = updatedTokens;
-		}
-
-		if (Object.keys(updateData).length > 0) {
-			transaction.update(userRef, updateData);
+			const updatedTokens = freshTokens.filter((token) => !tokensToRemove.has(token));
+			transaction.update(userRef, { fcmTokens: updatedTokens });
 		}
 	});
 
