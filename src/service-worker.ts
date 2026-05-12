@@ -40,7 +40,7 @@ onBackgroundMessage(messaging, (payload) => {
 	self.registration.showNotification(payload.data?.title ?? 'GoReach', {
 		body: payload.data?.body ?? 'Time to update your progress.',
 		icon: '/GoReach/favicon.png',
-		badge: '/GoReach/favicon.png',
+		badge: '/GoReach/badge.png',
 		data: {
 			url: payload.data?.url ?? '/GoReach/'
 		}
