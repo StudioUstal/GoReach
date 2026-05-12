@@ -77,7 +77,7 @@ export const sendScheduledGoalReminders = onSchedule(
 			} catch (error) {
 				logger.error('Failed to process scheduled reminders for a user document', {
 					userId: userDoc.id,
-					error
+					error: serializeError(error)
 				});
 			}
 		}
@@ -108,7 +108,7 @@ async function processUserReminders(userDoc: QueryDocumentSnapshot<DocumentData>
 		const data = d.data();
 		return {
 			id: d.id,
-			title: (data.title as string) ?? '',
+			title: String(`${data.icon as string} ${data.name as string}`),
 			time: (data.time as string) ?? undefined,
 			enabled: typeof data.enabled === 'boolean' ? (data.enabled as boolean) : undefined,
 			lastReminderSentAt: (data.lastReminderSentAt as Timestamp) ?? null
@@ -127,6 +127,11 @@ async function processUserReminders(userDoc: QueryDocumentSnapshot<DocumentData>
 	let activeTokens = tokens;
 
 	for (const goal of goals) {
+		// Skip if already processed in this run (prevents duplicates)
+		if (goalsToMarkSent.has(goal.id)) {
+			continue;
+		}
+
 		if (goal.enabled === false) {
 			continue;
 		}
@@ -176,14 +181,18 @@ async function processUserReminders(userDoc: QueryDocumentSnapshot<DocumentData>
 		const freshTokens = Array.isArray(freshData.fcmTokens) ? freshData.fcmTokens : [];
 		const reminderSentAt = Timestamp.now();
 
+		// Read all goal documents that need updating in the transaction
+		const goalRefs = Array.from(goalsToMarkSent).map((goalId) =>
+			userRef.collection('goals').doc(goalId)
+		);
+		const goalSnapshots = await Promise.all(goalRefs.map((ref) => transaction.get(ref)));
+
 		// Update each goal document's `lastReminderSentAt` field
-		for (const goalId of goalsToMarkSent) {
-			const goalRef = userRef.collection('goals').doc(goalId);
-			const goalSnap = await transaction.get(goalRef);
-			if (goalSnap.exists) {
-				transaction.update(goalRef, { lastReminderSentAt: reminderSentAt });
+		goalSnapshots.forEach((snap, index) => {
+			if (snap.exists) {
+				transaction.update(goalRefs[index]!, { lastReminderSentAt: reminderSentAt });
 			}
-		}
+		});
 
 		// Update user's tokens if any invalid ones were detected
 		if (tokensToRemove.size > 0) {
@@ -205,7 +214,7 @@ async function sendReminderToTokens(tokens: string[], goalTitle: string): Promis
 				tokens: tokenChunk,
 				notification: {
 					title: 'GoReach',
-					body: `Reminder: ${goalTitle}`
+					body: `${goalTitle}`
 				},
 				webpush: {
 					fcmOptions: {
@@ -223,7 +232,7 @@ async function sendReminderToTokens(tokens: string[], goalTitle: string): Promis
 			});
 		} catch (error) {
 			logger.error('Failed to send reminder notification chunk', {
-				error,
+				error: serializeError(error),
 				tokenCount: tokenChunk.length,
 				goalTitle
 			});
@@ -319,4 +328,17 @@ function chunkTokens(tokens: string[], chunkSize: number): string[][] {
 	}
 
 	return chunks;
+}
+
+function serializeError(error: unknown) {
+	if (!error) return { message: String(error) };
+	if (error instanceof Error) {
+		return { message: error.message, stack: error.stack };
+	}
+	try {
+		// Try to stringify plain objects
+		return JSON.parse(JSON.stringify(error));
+	} catch {
+		return { message: String(error) };
+	}
 }
