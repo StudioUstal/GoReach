@@ -73,7 +73,7 @@
 
 	<AddTaskCard />
 
-	<AllowNotificationsCard />
+	<AllowNotificationsCard userId={user.uid} />
 
 	<DeleteTodayDataCard />
 </div>

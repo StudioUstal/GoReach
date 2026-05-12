@@ -11,9 +11,41 @@
 /// <reference types="../.svelte-kit/ambient.d.ts" />
 
 import { build, files, version } from '$service-worker';
+import { initializeApp } from 'firebase/app';
+import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw';
+import {
+	PUBLIC_FIREBASE_API_KEY,
+	PUBLIC_FIREBASE_AUTH_DOMAIN,
+	PUBLIC_FIREBASE_APP_ID,
+	PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+	PUBLIC_FIREBASE_PROJECT_ID,
+	PUBLIC_FIREBASE_STORAGE_BUCKET
+} from '$env/static/public';
 
 // This gives `self` the correct types
 const self = globalThis.self as unknown as ServiceWorkerGlobalScope;
+
+const firebaseApp = initializeApp({
+	apiKey: PUBLIC_FIREBASE_API_KEY,
+	authDomain: PUBLIC_FIREBASE_AUTH_DOMAIN,
+	projectId: PUBLIC_FIREBASE_PROJECT_ID,
+	storageBucket: PUBLIC_FIREBASE_STORAGE_BUCKET,
+	messagingSenderId: PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+	appId: PUBLIC_FIREBASE_APP_ID
+});
+
+const messaging = getMessaging(firebaseApp);
+
+onBackgroundMessage(messaging, (payload) => {
+	self.registration.showNotification(payload.notification?.title ?? 'GoReach', {
+		body: payload.notification?.body ?? 'Time to update your progress.',
+		icon: '/GoReach/favicon.svg',
+		badge: '/GoReach/favicon.svg',
+		data: {
+			url: '/GoReach/'
+		}
+	});
+});
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
@@ -91,4 +123,28 @@ self.addEventListener('fetch', (event) => {
 	}
 
 	event.respondWith(respond());
+});
+
+self.addEventListener('notificationclick', (event) => {
+	event.notification.close();
+
+	const targetUrl = event.notification.data?.url ?? '/GoReach/';
+
+	event.waitUntil(
+		self.clients
+			.matchAll({ type: 'window', includeUncontrolled: true })
+			.then((windowClients: readonly WindowClient[]) => {
+				for (const client of windowClients) {
+					if ('focus' in client) {
+						return client.focus();
+					}
+				}
+
+				if (self.clients.openWindow) {
+					return self.clients.openWindow(targetUrl);
+				}
+
+				return undefined;
+			})
+	);
 });

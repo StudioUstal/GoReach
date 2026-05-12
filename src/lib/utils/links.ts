@@ -1,6 +1,6 @@
 type NavLink = {
 	name: string;
-	href: string;
+	href: '/' | '/week' | '/rewards' | '/settings';
 	icon: string;
 };
 

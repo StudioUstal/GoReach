@@ -40,3 +40,23 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+
+## Firebase Scheduled Notifications
+
+The frontend stays a static SvelteKit build on GitHub Pages. Scheduled notification delivery lives in the separate Firebase Functions worker under `functions/`, which reads and updates the shared Firestore `users` documents and sends FCM push notifications only.
+
+From the `functions/` folder:
+
+```sh
+npx firebase-tools login
+npm run build
+npm run deploy
+```
+
+Run the login step once before the first deploy. If you see `Failed to authenticate, have you run firebase login?`, it means the Firebase CLI is not signed in yet.
+
+Or deploy just the worker from the repository root:
+
+```sh
+firebase deploy --only functions
+```
