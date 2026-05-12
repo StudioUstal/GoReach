@@ -37,12 +37,12 @@ const firebaseApp = initializeApp({
 const messaging = getMessaging(firebaseApp);
 
 onBackgroundMessage(messaging, (payload) => {
-	self.registration.showNotification(payload.notification?.title ?? 'GoReach', {
-		body: payload.notification?.body ?? 'Time to update your progress.',
-		icon: '/GoReach/favicon.svg',
-		badge: '/GoReach/favicon.svg',
+	self.registration.showNotification(payload.data?.title ?? 'GoReach', {
+		body: payload.data?.body ?? 'Time to update your progress.',
+		icon: '/GoReach/favicon.png',
+		badge: '/GoReach/favicon.png',
 		data: {
-			url: '/GoReach/'
+			url: payload.data?.url ?? '/GoReach/'
 		}
 	});
 });

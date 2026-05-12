@@ -212,14 +212,10 @@ async function sendReminderToTokens(tokens: string[], goalTitle: string): Promis
 		try {
 			const response = await messaging.sendEachForMulticast({
 				tokens: tokenChunk,
-				notification: {
+				data: {
 					title: 'GoReach',
-					body: `${goalTitle}`
-				},
-				webpush: {
-					fcmOptions: {
-						link: REMINDER_LINK
-					}
+					body: `${goalTitle}`,
+					url: REMINDER_LINK
 				}
 			});
 
